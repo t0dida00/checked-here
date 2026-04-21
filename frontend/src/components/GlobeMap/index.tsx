@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 
 import BottomControls from '@/components/BottomControls';
+import LocationsPanel from '@/components/LocationsPanel';
 import locationsData from '@/data/locations.json';
 import {
   INITIAL_VIEW,
@@ -46,17 +47,6 @@ const DEFAULT_ROTATION_SPEED = speedToDegsPerFrame(3);
 const LOCATION_ITEMS = locationsData.locations as LocationItem[];
 const VISITED_COUNTRIES = LOCATION_ITEMS.map((item) => item.country);
 
-const SUMMARY_STATS = [
-  { label: 'Cities', value: String(LOCATION_ITEMS.length) },
-  {
-    label: 'Countries',
-    value: String(new Set(LOCATION_ITEMS.map((item) => item.country)).size),
-  },
-  {
-    label: 'Continents',
-    value: String(new Set(LOCATION_ITEMS.map((item) => item.continent)).size),
-  },
-] as const;
 
 export default function GlobeMap() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -93,6 +83,31 @@ export default function GlobeMap() {
     lastFrameRef.current = null;
     setRotating(false);
   }, []);
+
+  const handleLocationClick = useCallback((locations: LocationItem[]) => {
+    const map = mapRef.current;
+    if (!map || locations.length === 0) return;
+    
+    stopRotation();
+
+    if (locations.length === 1) {
+      map.flyTo({
+        center: [locations[0].coordinate.lng, locations[0].coordinate.lat],
+        zoom: 5,
+        duration: 2000
+      });
+    } else {
+      const lats = locations.map(l => l.coordinate.lat);
+      const lngs = locations.map(l => l.coordinate.lng);
+      map.fitBounds(
+        [
+          [Math.min(...lngs), Math.min(...lats)],
+          [Math.max(...lngs), Math.max(...lats)]
+        ],
+        { padding: 100, maxZoom: 4, duration: 2000 }
+      );
+    }
+  }, [stopRotation]);
 
   const startRotation = useCallback(() => {
     if (rotatingRef.current || !mapRef.current) return;
@@ -258,6 +273,26 @@ export default function GlobeMap() {
     applyAtmosphere(map, currentTheme);
     addCountryLayers(map);
     addVisitedCountryLayers(map, VISITED_COUNTRIES);
+    
+    if (!map.getSource('journey-line-source')) {
+      const coords = LOCATION_ITEMS.map(loc => [loc.coordinate.lng, loc.coordinate.lat]);
+      map.addSource('journey-line-source', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: { type: 'LineString', coordinates: coords }
+        }
+      });
+      map.addLayer({
+        id: 'journey-line-layer',
+        type: 'line',
+        source: 'journey-line-source',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: { 'line-color': '#4da6ff', 'line-width': 1.5, 'line-opacity': 0.6 }
+      });
+    }
+
     mountMarkers(map);
     hoverRef.current = { map, hoveredId: null };
     map.on('mousemove', 'countries-fill', (e) => {
@@ -315,18 +350,7 @@ export default function GlobeMap() {
   return (
     <>
       <div ref={containerRef} className={styles.map} role="application" />
-      <section className={styles.stats} aria-label="World overview statistics">
-        <article className={styles.statCard}>
-          <div className={styles.statList}>
-            {SUMMARY_STATS.map((stat) => (
-              <div key={stat.label} className={styles.statItem}>
-                <span className={styles.statLabel}>{stat.label}</span>
-                <strong className={styles.statValue}>{stat.value}</strong>
-              </div>
-            ))}
-          </div>
-        </article>
-      </section>
+      <LocationsPanel onLocationClick={handleLocationClick} />
       <BottomControls rotating={rotating} theme={theme} onRotateToggle={toggleRotation} onReset={handleReset} onThemeToggle={handleThemeToggle} />
       <div className={`${styles.tooltip} ${tooltip.visible ? styles.tooltipVisible : ''}`} role="tooltip" style={{ left: tooltip.x + 14, top: tooltip.y - 44 }}>
         {tooltip.name}
