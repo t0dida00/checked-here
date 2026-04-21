@@ -122,16 +122,17 @@ export function addVisitedCountryLayers(
   map: mapboxgl.Map,
   countries: string[],
 ) {
-  if (!countries.length) return;
-
   const uniqueCountries = Array.from(new Set(countries));
-  const filter: mapboxgl.FilterSpecification = [
-    'any',
-    ...uniqueCountries.flatMap((country) => [
-      ['==', ['get', 'name_en'], country],
-      ['==', ['get', 'name'], country],
-    ]),
-  ];
+  const filter: mapboxgl.FilterSpecification =
+    uniqueCountries.length > 0
+      ? [
+          'any',
+          ...uniqueCountries.flatMap((country) => [
+            ['==', ['get', 'name_en'], country],
+            ['==', ['get', 'name'], country],
+          ]),
+        ]
+      : ['==', ['get', 'name_en'], '__no_match__'];
 
   if (!map.getLayer(VISITED_FILL_LAYER)) {
     map.addLayer({
@@ -145,6 +146,8 @@ export function addVisitedCountryLayers(
         'fill-opacity': 0.18,
       },
     });
+  } else {
+    map.setFilter(VISITED_FILL_LAYER, filter);
   }
 
   if (!map.getLayer(VISITED_LINE_LAYER)) {
@@ -160,6 +163,8 @@ export function addVisitedCountryLayers(
         'line-opacity': 0.7,
       },
     });
+  } else {
+    map.setFilter(VISITED_LINE_LAYER, filter);
   }
 }
 

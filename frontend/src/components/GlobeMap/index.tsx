@@ -32,12 +32,14 @@ interface TooltipState {
 }
 
 const DEFAULT_ROTATION_SPEED = speedToDegsPerFrame(3);
+const JOURNEY_SOURCE_ID = 'journey-line-source';
+const JOURNEY_LAYER_ID = 'journey-line-layer';
 
 
 export default function GlobeMap() {
   const { data } = useLocations();
   const locationItems: LocationItem[] = data?.locations ?? [];
-  const visitedCountries = locationItems.map((item) => item.country);
+  const locationItemsRef = useRef<LocationItem[]>(locationItems);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import('mapbox-gl').Map | null>(null);
@@ -63,6 +65,10 @@ export default function GlobeMap() {
     y: 0,
     visible: false,
   });
+
+  useEffect(() => {
+    locationItemsRef.current = locationItems;
+  }, [locationItems]);
 
   const stopRotation = useCallback(() => {
     rotatingRef.current = false;
@@ -231,8 +237,15 @@ export default function GlobeMap() {
     });
   }, []);
 
+  const clearMarkers = useCallback(() => {
+    markersRef.current.forEach((m) => m.marker.remove());
+    markersRef.current = [];
+    Object.values(clustersRef.current).forEach((c) => c.remove());
+    clustersRef.current = {};
+  }, []);
+
   const mountMarkers = useCallback((map: mapboxgl.Map, items: LocationItem[]) => {
-    if (markersRef.current.length > 0) return;
+    clearMarkers();
     markersRef.current = items.map((location) => {
       const el = document.createElement('button');
       el.type = 'button';
@@ -251,39 +264,54 @@ export default function GlobeMap() {
         markerHoverRef.current = true;
         hoverRef.current = { map, hoveredId: hoverRef.current.hoveredId };
         setHoverByCountryName(hoverRef.current, location.country);
-        setTooltip(c => ({ ...c, visible: false }));
+        setTooltip((c) => ({ ...c, visible: false }));
       });
-      el.addEventListener('mouseleave', () => { markerHoverRef.current = false; clearHover(hoverRef.current); });
+      el.addEventListener('mouseleave', () => {
+        markerHoverRef.current = false;
+        clearHover(hoverRef.current);
+      });
       const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([location.coordinate.lng, location.coordinate.lat]).addTo(map);
       return { marker, element: el, location };
     });
     updateClustering();
-  }, [updateClustering]);
+  }, [clearMarkers, updateClustering]);
+
+  const syncJourneyLine = useCallback((map: mapboxgl.Map, items: LocationItem[]) => {
+    const coordinates = items.map((loc) => [loc.coordinate.lng, loc.coordinate.lat]);
+    const journeyData = {
+      type: 'Feature' as const,
+      properties: {},
+      geometry: {
+        type: 'LineString' as const,
+        coordinates,
+      },
+    };
+
+    const source = map.getSource(JOURNEY_SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
+    if (source) {
+      source.setData(journeyData);
+      return;
+    }
+
+    map.addSource(JOURNEY_SOURCE_ID, {
+      type: 'geojson',
+      data: journeyData,
+    });
+
+    map.addLayer({
+      id: JOURNEY_LAYER_ID,
+      type: 'line',
+      source: JOURNEY_SOURCE_ID,
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': '#4da6ff', 'line-width': 1.5, 'line-opacity': 0.6 }
+    });
+  }, []);
 
   const setupLayersAndHover = useCallback((map: import('mapbox-gl').Map, currentTheme: Theme, items: LocationItem[]) => {
     applyAtmosphere(map, currentTheme);
     addCountryLayers(map);
     addVisitedCountryLayers(map, items.map((i) => i.country));
-
-    if (!map.getSource('journey-line-source')) {
-      const coords = items.map(loc => [loc.coordinate.lng, loc.coordinate.lat]);
-      map.addSource('journey-line-source', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: { type: 'LineString', coordinates: coords }
-        }
-      });
-      map.addLayer({
-        id: 'journey-line-layer',
-        type: 'line',
-        source: 'journey-line-source',
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': '#4da6ff', 'line-width': 1.5, 'line-opacity': 0.6 }
-      });
-    }
-
+    syncJourneyLine(map, items);
     mountMarkers(map, items);
     hoverRef.current = { map, hoveredId: null };
     map.on('mousemove', 'countries-fill', (e) => {
@@ -299,10 +327,10 @@ export default function GlobeMap() {
     });
     map.on('mousedown', () => { if (rotatingRef.current) stopRotation(); });
     map.on('move', updateClustering);
-  }, [mountMarkers, stopRotation, updateClustering]);
+  }, [mountMarkers, stopRotation, syncJourneyLine, updateClustering]);
 
   useEffect(() => {
-    if (mapRef.current || !containerRef.current || locationItems.length === 0) return;
+    if (mapRef.current || !containerRef.current) return;
     mapboxgl.accessToken = MAPBOX_TOKEN;
     const map = new mapboxgl.Map({
       container: containerRef.current,
@@ -313,15 +341,26 @@ export default function GlobeMap() {
       antialias: true,
     });
     mapRef.current = map;
-    map.once('style.load', () => { setupLayersAndHover(map, 'dark', locationItems); startRotation(); });
+    map.once('style.load', () => {
+      setupLayersAndHover(map, 'dark', locationItemsRef.current);
+      startRotation();
+    });
     return () => {
       stopRotation();
-      markersRef.current.forEach(m => m.marker.remove());
-      Object.values(clustersRef.current).forEach(c => c.remove());
+      clearMarkers();
       map.remove();
       mapRef.current = null;
     };
-  }, [locationItems, setupLayersAndHover, startRotation, stopRotation]);
+  }, [clearMarkers, setupLayersAndHover, startRotation, stopRotation]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    addVisitedCountryLayers(map, locationItems.map((item) => item.country));
+    syncJourneyLine(map, locationItems);
+    mountMarkers(map, locationItems);
+  }, [locationItems, mountMarkers, syncJourneyLine]);
 
   const handleCurrentLocationDetected = useCallback(
     (location: CurrentLocationAnalysis) => {

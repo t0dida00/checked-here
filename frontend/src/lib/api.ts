@@ -21,18 +21,6 @@ export interface CoordinateInput {
   lng: number;
 }
 
-interface ReverseGeocodeResponse {
-  city?: string;
-  locality?: string;
-  countryName?: string;
-  countryCode?: string;
-  continent?: string;
-  continentCode?: string;
-  principalSubdivision?: string;
-  postcode?: string;
-  plusCode?: string;
-}
-
 export interface CurrentLocationAnalysis {
   coordinate: CoordinateInput;
   city: string;
@@ -40,10 +28,10 @@ export interface CurrentLocationAnalysis {
   country: string;
   countryCode: string;
   continent: string;
-  continentCode: string;
-  principalSubdivision: string;
-  postcode: string;
-  plusCode: string;
+  continentCode?: string;
+  principalSubdivision?: string;
+  postcode?: string;
+  plusCode?: string;
 }
 
 const apiClient = axios.create({ baseURL: '/api' });
@@ -56,27 +44,31 @@ export async function fetchLocations(): Promise<LocationsResponse> {
 export async function analyzeCoordinates(
   coordinate: CoordinateInput,
 ): Promise<CurrentLocationAnalysis> {
-  const { data } = await axios.get<ReverseGeocodeResponse>(
-    'https://api-bdc.net/data/reverse-geocode',
-    {
-      params: {
-        latitude: coordinate.lat,
-        longitude: coordinate.lng,
-        localityLanguage: 'en',
-      },
-    },
+  const { data } = await apiClient.post<Partial<CurrentLocationAnalysis>>(
+    '/checkin',
+    { coordinate },
   );
 
   return {
-    coordinate,
-    city: data.city || data.locality || 'Unknown location',
-    locality: data.locality || '',
-    country: data.countryName || 'Unknown country',
+    coordinate: data.coordinate || coordinate,
+    city: data.city || 'Unknown location',
+    locality: data.locality || data.city || '',
+    country: data.country || 'Unknown country',
     countryCode: data.countryCode || '',
     continent: data.continent || 'Unknown continent',
-    continentCode: data.continentCode || '',
-    principalSubdivision: data.principalSubdivision || '',
-    postcode: data.postcode || '',
-    plusCode: data.plusCode || '',
+    continentCode: data.continentCode,
+    principalSubdivision: data.principalSubdivision,
+    postcode: data.postcode,
+    plusCode: data.plusCode,
   };
+}
+
+export async function createCheckin(
+  analysis: CurrentLocationAnalysis,
+): Promise<LocationsResponse> {
+  const { data } = await apiClient.post<LocationsResponse>('/checkin', {
+    analysis,
+  });
+
+  return data;
 }

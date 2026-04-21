@@ -1,8 +1,14 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { type CurrentLocationAnalysis } from '@/lib/api';
+import {
+  analyzeCoordinates,
+  createCheckin,
+  type CurrentLocationAnalysis,
+} from '@/lib/api';
 import ThemeToggle from '@/components/ThemeToggle';
+import { locationsQueryKey } from '@/hooks/useLocations';
 
 import styles from './index.module.scss';
 
@@ -50,8 +56,10 @@ export default function BottomControls({
   onThemeToggle,
   onCurrentLocationDetected,
 }: Props) {
+  const queryClient = useQueryClient();
   const [showCheckinMenu, setShowCheckinMenu] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [locationError, setLocationError] = useState('');
   const [locationAnalysis, setLocationAnalysis] =
     useState<CurrentLocationAnalysis | null>(null);
@@ -64,35 +72,57 @@ export default function BottomControls({
   };
 
   const handleCurrentLocation = () => {
+    if (!('geolocation' in navigator)) {
+      setLocationError('Geolocation is not supported in this browser.');
+      return;
+    }
+
     setIsLocating(true);
     setLocationError('');
-    const result: CurrentLocationAnalysis = {
-      coordinate: {
-        lat: 65.01236,
-        lng: 25.46816,
-      },
-      city: 'Oulu',
-      locality: 'Oulu',
-      country: 'Finland',
-      countryCode: 'FI',
-      continent: 'Europe',
-      continentCode: 'EU',
-      principalSubdivision: 'North Ostrobothnia',
-      postcode: '',
-      plusCode: '',
-    };
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const result = await analyzeCoordinates({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
 
-    window.setTimeout(() => {
-      setShowCheckinMenu(false);
-      setLocationAnalysis(result);
-      setIsLocating(false);
-    }, 300);
+          setShowCheckinMenu(false);
+          setLocationAnalysis(result);
+        } catch {
+          setLocationError('Unable to analyze your current coordinates right now.');
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        setLocationError(error.message);
+        setIsLocating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000,
+      },
+    );
   };
 
   const handleConfirmCheckin = () => {
     if (!locationAnalysis) return;
-    onCurrentLocationDetected?.(locationAnalysis);
-    closeCheckinUi();
+    setIsSaving(true);
+    setLocationError('');
+
+    void createCheckin(locationAnalysis)
+      .then((updatedLocations) => {
+        queryClient.setQueryData(locationsQueryKey, updatedLocations);
+        closeCheckinUi();
+      })
+      .catch(() => {
+        setLocationError('Unable to save this checkin right now.');
+      })
+      .finally(() => {
+        setIsSaving(false);
+      });
   };
 
   return (
@@ -137,13 +167,27 @@ export default function BottomControls({
           </div>
 
           <div className={styles.modalActions}>
-            <button className={styles.modalPrimaryBtn} onClick={handleConfirmCheckin}>
-              Checkin now
+            <button
+              className={styles.modalPrimaryBtn}
+              onClick={handleConfirmCheckin}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Checkin now'}
             </button>
-            <button className={styles.modalSecondaryBtn} onClick={closeCheckinUi}>
+            <button
+              className={styles.modalSecondaryBtn}
+              onClick={closeCheckinUi}
+              disabled={isSaving}
+            >
               Cancel
             </button>
           </div>
+
+          {locationError ? (
+            <div className={styles.locationFeedback} role="status">
+              {locationError}
+            </div>
+          ) : null}
         </div>
       )}
 
