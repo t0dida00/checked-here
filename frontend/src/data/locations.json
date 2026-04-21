@@ -1,7 +1,7 @@
 {
   "id": "session-001",
   "userId": "user-001",
-  "lastVisited": "2026-04-21T16:45:00Z",
+  "lastVisited": "2026-04-21T23:26:36.855Z",
   "locations": [
     {
       "coordinate": {
@@ -38,7 +38,7 @@
     },
     {
       "coordinate": {
-        "lat": 45.7640,
+        "lat": 45.764,
         "lng": 4.8357
       },
       "logo": "/locations/lyon.svg",
@@ -46,6 +46,94 @@
       "city": "Lyon",
       "country": "France",
       "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 65.0257,
+        "lng": 25.4223
+      },
+      "logo": "/locations/new-york.svg",
+      "createdAt": "2026-04-21T23:03:39.404Z",
+      "city": "Oulu",
+      "country": "Finland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 65.0257,
+        "lng": 25.4223
+      },
+      "logo": "/locations/new-york.svg",
+      "createdAt": "2026-04-21T23:05:58.278Z",
+      "city": "Oulu",
+      "country": "Finland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 65.0257,
+        "lng": 25.4223
+      },
+      "logo": "/locations/new-york.svg",
+      "createdAt": "2026-04-21T23:06:06.369Z",
+      "city": "Oulu",
+      "country": "Finland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 65.0257,
+        "lng": 25.4223
+      },
+      "logo": "/locations/new-york.svg",
+      "createdAt": "2026-04-21T23:06:10.776Z",
+      "city": "Oulu",
+      "country": "Finland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 65.0257,
+        "lng": 25.4223
+      },
+      "logo": "/locations/new-york.svg",
+      "createdAt": "2026-04-21T23:24:50.543Z",
+      "city": "Oulu",
+      "country": "Finland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 39.47132,
+        "lng": -0.375984
+      },
+      "logo": "/locations/new-york.svg",
+      "createdAt": "2026-04-21T23:25:07.111Z",
+      "city": "Valencia",
+      "country": "Spain",
+      "continent": "Unknown"
+    },
+    {
+      "coordinate": {
+        "lat": 40.421345,
+        "lng": -3.701219
+      },
+      "logo": "/locations/new-york.svg",
+      "createdAt": "2026-04-21T23:25:58.683Z",
+      "city": "Madrid",
+      "country": "Spain",
+      "continent": "Unknown"
+    },
+    {
+      "coordinate": {
+        "lat": 10.775525,
+        "lng": 106.702105
+      },
+      "logo": "/locations/new-york.svg",
+      "createdAt": "2026-04-21T23:26:36.855Z",
+      "city": "Ho Chi Minh City",
+      "country": "Vietnam",
+      "continent": "Unknown"
     }
   ]
 }

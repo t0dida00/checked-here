@@ -146,6 +146,81 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
 }
 
+.manualSearchPanel {
+  display: grid;
+  gap: 14px;
+  padding: 18px 16px 16px;
+  background:
+    radial-gradient(circle at top left, rgba(77, 166, 255, 0.14), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+}
+
+.manualSearchInput {
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-size: v.$font-sm;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+}
+
+.manualSearchResults {
+  display: grid;
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(3, 8, 20, 0.22);
+}
+
+.manualSearchHint {
+  padding: 14px 16px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.manualSearchItem {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  background: transparent;
+  color: var(--text);
+
+  @include m.focus-ring;
+  @include m.transition(background);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+}
+
+.manualSearchPrimary {
+  font-size: v.$font-sm;
+  font-weight: 600;
+}
+
+.manualSearchSecondary {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 .analysisModal {
   position: fixed;
   top: 50%;

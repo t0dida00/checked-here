@@ -1,11 +1,13 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   analyzeCoordinates,
   createCheckin,
   type CurrentLocationAnalysis,
+  type ManualLocationSuggestion,
+  searchLocations,
 } from '@/lib/api';
 import ThemeToggle from '@/components/ThemeToggle';
 import { locationsQueryKey } from '@/hooks/useLocations';
@@ -60,16 +62,54 @@ export default function BottomControls({
   const [showCheckinMenu, setShowCheckinMenu] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSearchingManual, setIsSearchingManual] = useState(false);
+  const [showManualLocationModal, setShowManualLocationModal] = useState(false);
+  const [manualQuery, setManualQuery] = useState('');
+  const [manualSuggestions, setManualSuggestions] = useState<ManualLocationSuggestion[]>([]);
   const [locationError, setLocationError] = useState('');
   const [locationAnalysis, setLocationAnalysis] =
     useState<CurrentLocationAnalysis | null>(null);
 
   const closeCheckinUi = () => {
     setShowCheckinMenu(false);
+    setShowManualLocationModal(false);
     setLocationAnalysis(null);
     setLocationError('');
     setIsLocating(false);
+    setIsSearchingManual(false);
+    setManualQuery('');
+    setManualSuggestions([]);
   };
+
+  useEffect(() => {
+    if (!showManualLocationModal) return;
+
+    const trimmedQuery = manualQuery.trim();
+    if (trimmedQuery.length < 2) {
+      setManualSuggestions([]);
+      setIsSearchingManual(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsSearchingManual(true);
+      setLocationError('');
+
+      void searchLocations(trimmedQuery)
+        .then((results) => {
+          setManualSuggestions(results);
+        })
+        .catch(() => {
+          setLocationError('Unable to search locations right now.');
+          setManualSuggestions([]);
+        })
+        .finally(() => {
+          setIsSearchingManual(false);
+        });
+    }, 500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [manualQuery, showManualLocationModal]);
 
   const handleCurrentLocation = () => {
     if (!('geolocation' in navigator)) {
@@ -125,15 +165,89 @@ export default function BottomControls({
       });
   };
 
+  const handleManualLocationSelect = (suggestion: ManualLocationSuggestion) => {
+    setShowManualLocationModal(false);
+    setLocationError('');
+    setLocationAnalysis({
+      coordinate: suggestion.coordinate,
+      city: suggestion.city,
+      locality: suggestion.city,
+      country: suggestion.country,
+      countryCode: '',
+      continent: suggestion.continent,
+    });
+  };
+
   return (
     <>
-      {(showCheckinMenu || locationAnalysis) && (
+      {(showCheckinMenu || showManualLocationModal || locationAnalysis) && (
         <button
           type="button"
           className={styles.backdrop}
           onClick={closeCheckinUi}
           aria-label="Close checkin dialog"
         />
+      )}
+
+      {showManualLocationModal && (
+        <div
+          className={styles.analysisModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Search location manually"
+        >
+          <div className={styles.manualSearchPanel}>
+            <div className={styles.analysisTitle}>Enter location manually</div>
+            <input
+              type="text"
+              value={manualQuery}
+              onChange={(event) => setManualQuery(event.target.value)}
+              placeholder="Search city, address, or country"
+              className={styles.manualSearchInput}
+              autoFocus
+            />
+
+            <div className={styles.manualSearchResults}>
+              {isSearchingManual ? (
+                <div className={styles.manualSearchHint}>Searching locations...</div>
+              ) : null}
+
+              {!isSearchingManual && manualQuery.trim().length < 2 ? (
+                <div className={styles.manualSearchHint}>
+                  Type at least 2 characters to see suggestions.
+                </div>
+              ) : null}
+
+              {!isSearchingManual && manualQuery.trim().length >= 2 && manualSuggestions.length === 0 ? (
+                <div className={styles.manualSearchHint}>No matching locations found.</div>
+              ) : null}
+
+              {manualSuggestions.map((suggestion) => (
+                <button
+                  key={suggestion.id}
+                  type="button"
+                  className={styles.manualSearchItem}
+                  onClick={() => handleManualLocationSelect(suggestion)}
+                >
+                  <span className={styles.manualSearchPrimary}>{suggestion.city}</span>
+                  <span className={styles.manualSearchSecondary}>{suggestion.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.modalActions}>
+            <button className={styles.modalSecondaryBtn} onClick={closeCheckinUi}>
+              Cancel
+            </button>
+          </div>
+
+          {locationError ? (
+            <div className={styles.locationFeedback} role="status">
+              {locationError}
+            </div>
+          ) : null}
+        </div>
       )}
 
       {locationAnalysis && (
@@ -231,7 +345,18 @@ export default function BottomControls({
               >
                 {isLocating ? 'Detecting current location...' : 'Use current location'}
               </button>
-              <button className={styles.popupItem}>Enter location manually</button>
+              <button
+                className={styles.popupItem}
+                onClick={() => {
+                  setShowCheckinMenu(false);
+                  setShowManualLocationModal(true);
+                  setLocationError('');
+                  setManualQuery('');
+                  setManualSuggestions([]);
+                }}
+              >
+                Enter location manually
+              </button>
               <button className={styles.popupItem}>With the sights</button>
 
               {locationError ? (

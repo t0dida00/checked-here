@@ -34,6 +34,15 @@ export interface CurrentLocationAnalysis {
   plusCode?: string;
 }
 
+export interface ManualLocationSuggestion {
+  id: string;
+  label: string;
+  city: string;
+  country: string;
+  continent: string;
+  coordinate: CoordinateInput;
+}
+
 const apiClient = axios.create({ baseURL: '/api' });
 
 export async function fetchLocations(): Promise<LocationsResponse> {
@@ -68,6 +77,16 @@ export async function createCheckin(
 ): Promise<LocationsResponse> {
   const { data } = await apiClient.post<LocationsResponse>('/checkin', {
     analysis,
+  });
+
+  return data;
+}
+
+export async function searchLocations(
+  query: string,
+): Promise<ManualLocationSuggestion[]> {
+  const { data } = await apiClient.get<ManualLocationSuggestion[]>('/location-search', {
+    params: { q: query },
   });
 
   return data;
