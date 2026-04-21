@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npx next *)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:3000/globe -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s http://localhost:3000/globe)",
+      "Bash(curl -s \"http://localhost:3000/_next/static/css/app/globe/page.css\")",
+      "Bash(curl -s \"http://localhost:3000/_next/static/css/app/layout.css\")"
+    ]
+  }
+}

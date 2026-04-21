@@ -1,0 +1,292 @@
+@use '@/styles/variables' as v;
+@use '@/styles/mixins' as m;
+
+.map {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+
+  &:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: -3px;
+  }
+}
+
+.stats {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  width: min(220px, calc(100vw - 96px));
+  pointer-events: none;
+}
+
+.statCard {
+  padding: 14px 16px;
+  border-radius: v.$radius-md;
+  pointer-events: auto;
+
+  @include m.glass;
+}
+
+.statList {
+  display: grid;
+  gap: 10px;
+}
+
+.statItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.statLabel {
+  display: block;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.statValue {
+  display: block;
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 200;
+  padding: 7px 13px;
+  border-radius: v.$radius-sm;
+  color: var(--text);
+  font-size: v.$font-sm;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+
+  @include m.glass;
+  @include m.transition(opacity);
+
+  &.tooltipVisible {
+    opacity: 1;
+  }
+
+  @include m.reduced-motion {
+    transition: none;
+    opacity: 1;
+
+    &:not(.tooltipVisible) {
+      display: none;
+    }
+  }
+}
+
+.markerPin {
+  display: block;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transform-origin: bottom center;
+  transition: opacity 180ms ease;
+
+  &:hover {
+    z-index: 10;
+
+    .markerInner {
+      transform: scale(1.4);
+      box-shadow: 0 4px 10px rgba(61, 16, 43, 0.45), 0 0 0 3px rgba(255, 105, 180, 0.3);
+      border-color: rgba(255, 169, 214, 0.9);
+    }
+
+    .markerLabel {
+      opacity: 1;
+      transform: translateX(-50%) translateY(4px);
+    }
+  }
+}
+
+.markerInner {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border: 2.5px solid rgba(255, 169, 214, 0.7);
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255, 180, 221, 0.98), rgba(196, 78, 151, 0.98));
+  box-shadow: 0 12px 30px rgba(61, 16, 43, 0.35), 0 0 0 6px rgba(255, 105, 180, 0.2);
+  overflow: hidden;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(255, 105, 180, 0.3) 0%, rgba(255, 105, 180, 0.12) 42%, transparent 72%);
+    z-index: 0;
+    pointer-events: none;
+  }
+}
+
+.markerImage,
+.markerFallback {
+  position: relative;
+  z-index: 1;
+}
+
+.markerImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.markerFallback {
+  display: none;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: #f8fbff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.markerLabel {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 14px;
+  border: 1px solid rgba(255, 169, 214, 0.35);
+  border-radius: 999px;
+  background: rgba(84, 22, 60, 0.9);
+  box-shadow: 0 10px 24px rgba(61, 16, 43, 0.3);
+  color: #fff4fb;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 720px) {
+  .stats {
+    top: 16px;
+    left: 16px;
+    width: min(320px, calc(100vw - 32px));
+  }
+
+  .statCard {
+    padding: 12px 14px;
+  }
+
+  .statList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .statItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .statLabel {
+    font-size: 11px;
+  }
+
+  .statValue {
+    font-size: 1rem;
+  }
+
+  .markerInner {
+    width: 40px;
+    height: 40px;
+  }
+
+  .markerLabel {
+    top: calc(100% + 10px);
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+}
+
+.clusterMarker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 20px rgba(255, 105, 180, 0.4), 0 12px 30px rgba(0, 0, 0, 0.3);
+  background: #000;
+  overflow: visible;
+  transition: box-shadow 180ms ease;
+
+  &:hover {
+    transform: scale(1.1);
+    border-color: #fff;
+    box-shadow: 0 0 30px rgba(255, 105, 180, 0.6), 0 16px 40px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.clusterRepresentative {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  opacity: 0.9;
+}
+
+.clusterBadge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff4b2b 0%, #ff416c 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(255, 75, 43, 0.4);
+  border: 2px solid white;
+  z-index: 2;
+}
+
+.clusterMedium {
+  width: 70px;
+  height: 70px;
+  border-width: 3px;
+}
+
+.clusterLarge {
+  width: 80px;
+  height: 80px;
+  border-width: 4px;
+}

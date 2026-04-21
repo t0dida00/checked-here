@@ -1,0 +1,46 @@
+// ── Design Tokens ─────────────────────────────────────────────
+// These map to CSS custom properties so theming works at runtime.
+// WCAG 2.1 contrast ratios are noted on colour pairs.
+
+// Surface / backdrop
+$surface:        var(--surface);
+$surface-hover:  var(--surface-hover);
+$surface-active: var(--surface-active);
+$border:         var(--border);
+
+// Typography
+$text:       var(--text);
+$text-muted: var(--text-muted);
+
+// Accent (used for interactive focus, highlight)
+$accent:      var(--accent);
+$accent-glow: var(--accent-glow);
+
+// Elevation
+$shadow: var(--shadow);
+
+// Spacing
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 16px;
+$space-lg: 24px;
+$space-xl: 32px;
+
+// Radius
+$radius-sm:   8px;
+$radius-md:   14px;
+$radius-pill: 9999px;
+
+// Motion
+$ease:            cubic-bezier(0.4, 0, 0.2, 1);
+$duration-fast:   140ms;
+$duration-base:   220ms;
+$duration-slow:   400ms;
+
+// Blur
+$blur: 18px;
+
+// Typography scale
+$font-xs: 11px;
+$font-sm: 13px;
+$font-md: 15px;

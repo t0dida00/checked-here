@@ -1,0 +1,37 @@
+@use 'variables' as v;
+
+// Glass-morphism surface
+@mixin glass {
+  background: v.$surface;
+  border: 1px solid v.$border;
+  backdrop-filter: blur(v.$blur);
+  -webkit-backdrop-filter: blur(v.$blur);
+  box-shadow: v.$shadow;
+}
+
+// Visible focus ring — WCAG 2.1 SC 2.4.7 (Focus Visible)
+@mixin focus-ring($offset: 3px) {
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: $offset;
+    border-radius: inherit;
+  }
+}
+
+// Respect prefers-reduced-motion — WCAG 2.1 SC 2.3.3
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+// Smooth property transition (disabled for reduced-motion users)
+@mixin transition($props...) {
+  transition-property: $props;
+  transition-duration: v.$duration-base;
+  transition-timing-function: v.$ease;
+
+  @include reduced-motion {
+    transition: none;
+  }
+}

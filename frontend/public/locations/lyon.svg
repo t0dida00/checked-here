@@ -1,0 +1,16 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="16" y1="16" x2="112" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7B2FF7"/>
+      <stop offset="1" stop-color="#F107A3"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  
+  <!-- Lion Silhouette (Simplified) -->
+  <path d="M48 40C48 40 40 40 40 52C40 64 52 64 52 76V88H68V76C68 64 80 64 80 52C80 40 72 40 72 40H48Z" fill="#FFFFFF" fill-opacity="0.9"/>
+  <circle cx="60" cy="48" r="12" fill="#FFFFFF" fill-opacity="0.9"/>
+  <path d="M72 40C88 40 96 52 96 68C96 84 80 92 64 92" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+  
+  <path d="M16 102C34 94 46 94 64 100C83 106 98 106 112 100V128H16V102Z" fill="#000000" fill-opacity="0.15"/>
+</svg>

@@ -1,0 +1,20 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="16" y1="16" x2="112" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF5F6D"/>
+      <stop offset="1" stop-color="#FFC371"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  
+  <!-- Red Sun backdrop -->
+  <circle cx="64" cy="58" r="32" fill="#FFFFFF" fill-opacity="0.2"/>
+  <circle cx="64" cy="58" r="24" fill="#FF4B2B" fill-opacity="0.8"/>
+
+  <!-- Torii Gate -->
+  <path d="M40 85V45M88 85V45" stroke="#1A1A1A" stroke-width="8" stroke-linecap="round"/>
+  <path d="M32 42C32 42 48 36 64 36C80 36 96 42 96 42" stroke="#1A1A1A" stroke-width="10" stroke-linecap="round"/>
+  <path d="M38 52H90" stroke="#1A1A1A" stroke-width="6" stroke-linecap="round"/>
+  
+  <path d="M16 102C34 94 46 94 64 100C83 106 98 106 112 100V128H16V102Z" fill="#000000" fill-opacity="0.15"/>
+</svg>

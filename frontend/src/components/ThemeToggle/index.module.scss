@@ -1,0 +1,45 @@
+@use '@/styles/variables' as v;
+@use '@/styles/mixins' as m;
+
+.toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  border-radius: v.$radius-pill;
+  color: var(--text);
+
+  @include m.glass;
+  @include m.focus-ring;
+  @include m.transition(background, border-color, transform, box-shadow);
+
+  &:hover {
+    background: var(--surface-hover);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.icon {
+  font-size: 17px;
+  line-height: 1;
+  display: block;
+  @include m.transition(transform);
+}
+
+@media (max-width: 720px) {
+  .toggle {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    border-radius: v.$radius-pill;
+  }
+
+  .icon {
+    font-size: 16px;
+  }
+}
