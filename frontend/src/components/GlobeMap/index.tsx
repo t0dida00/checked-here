@@ -5,7 +5,8 @@ import mapboxgl from 'mapbox-gl';
 
 import BottomControls from '@/components/BottomControls';
 import LocationsPanel from '@/components/LocationsPanel';
-import locationsData from '@/data/locations.json';
+import { useLocations, type LocationItem } from '@/hooks/useLocations';
+import { type CurrentLocationAnalysis } from '@/lib/api';
 import {
   INITIAL_VIEW,
   MAPBOX_TOKEN,
@@ -30,25 +31,14 @@ interface TooltipState {
   visible: boolean;
 }
 
-interface LocationItem {
-  coordinate: {
-    lat: number;
-    lng: number;
-  };
-  logo: string;
-  createdAt: string;
-  city: string;
-  country: string;
-  continent: string;
-}
-
 const DEFAULT_ROTATION_SPEED = speedToDegsPerFrame(3);
-
-const LOCATION_ITEMS = locationsData.locations as LocationItem[];
-const VISITED_COUNTRIES = LOCATION_ITEMS.map((item) => item.country);
 
 
 export default function GlobeMap() {
+  const { data } = useLocations();
+  const locationItems: LocationItem[] = data?.locations ?? [];
+  const visitedCountries = locationItems.map((item) => item.country);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import('mapbox-gl').Map | null>(null);
   const markersRef = useRef<
@@ -163,7 +153,8 @@ export default function GlobeMap() {
 
     // Cluster algorithm
     const processed = new Set();
-    const clusters: any[] = [];
+    type ProjectedMarker = (typeof projectionData)[number];
+    const clusters: ProjectedMarker[][] = [];
     projectionData.forEach((m, i) => {
       if (processed.has(i)) return;
       processed.add(i);
@@ -240,9 +231,9 @@ export default function GlobeMap() {
     });
   }, []);
 
-  const mountMarkers = useCallback((map: mapboxgl.Map) => {
+  const mountMarkers = useCallback((map: mapboxgl.Map, items: LocationItem[]) => {
     if (markersRef.current.length > 0) return;
-    markersRef.current = LOCATION_ITEMS.map((location) => {
+    markersRef.current = items.map((location) => {
       const el = document.createElement('button');
       el.type = 'button';
       el.className = styles.markerPin;
@@ -269,13 +260,13 @@ export default function GlobeMap() {
     updateClustering();
   }, [updateClustering]);
 
-  const setupLayersAndHover = useCallback((map: import('mapbox-gl').Map, currentTheme: Theme) => {
+  const setupLayersAndHover = useCallback((map: import('mapbox-gl').Map, currentTheme: Theme, items: LocationItem[]) => {
     applyAtmosphere(map, currentTheme);
     addCountryLayers(map);
-    addVisitedCountryLayers(map, VISITED_COUNTRIES);
-    
+    addVisitedCountryLayers(map, items.map((i) => i.country));
+
     if (!map.getSource('journey-line-source')) {
-      const coords = LOCATION_ITEMS.map(loc => [loc.coordinate.lng, loc.coordinate.lat]);
+      const coords = items.map(loc => [loc.coordinate.lng, loc.coordinate.lat]);
       map.addSource('journey-line-source', {
         type: 'geojson',
         data: {
@@ -293,7 +284,7 @@ export default function GlobeMap() {
       });
     }
 
-    mountMarkers(map);
+    mountMarkers(map, items);
     hoverRef.current = { map, hoveredId: null };
     map.on('mousemove', 'countries-fill', (e) => {
       if (markerHoverRef.current || !e.features?.length) return;
@@ -311,7 +302,7 @@ export default function GlobeMap() {
   }, [mountMarkers, stopRotation, updateClustering]);
 
   useEffect(() => {
-    if (mapRef.current || !containerRef.current) return;
+    if (mapRef.current || !containerRef.current || locationItems.length === 0) return;
     mapboxgl.accessToken = MAPBOX_TOKEN;
     const map = new mapboxgl.Map({
       container: containerRef.current,
@@ -322,7 +313,7 @@ export default function GlobeMap() {
       antialias: true,
     });
     mapRef.current = map;
-    map.once('style.load', () => { setupLayersAndHover(map, 'dark'); startRotation(); });
+    map.once('style.load', () => { setupLayersAndHover(map, 'dark', locationItems); startRotation(); });
     return () => {
       stopRotation();
       markersRef.current.forEach(m => m.marker.remove());
@@ -330,15 +321,30 @@ export default function GlobeMap() {
       map.remove();
       mapRef.current = null;
     };
-  }, [setupLayersAndHover, startRotation, stopRotation]);
+  }, [locationItems, setupLayersAndHover, startRotation, stopRotation]);
+
+  const handleCurrentLocationDetected = useCallback(
+    (location: CurrentLocationAnalysis) => {
+      const map = mapRef.current;
+      if (!map) return;
+
+      stopRotation();
+      map.flyTo({
+        center: [location.coordinate.lng, location.coordinate.lat],
+        zoom: 5,
+        duration: 1800,
+      });
+    },
+    [stopRotation],
+  );
 
   const handleThemeToggle = useCallback(() => {
     const map = mapRef.current; if (!map) return;
     const nextTheme: Theme = theme === 'dark' ? 'light' : 'dark';
     setTheme(nextTheme); document.documentElement.setAttribute('data-theme', nextTheme);
     stopRotation(); map.setStyle(MAP_STYLES[nextTheme]);
-    map.once('style.load', () => setupLayersAndHover(map, nextTheme));
-  }, [theme, setupLayersAndHover, stopRotation]);
+    map.once('style.load', () => setupLayersAndHover(map, nextTheme, locationItems));
+  }, [theme, locationItems, setupLayersAndHover, stopRotation]);
 
   const handleReset = useCallback(() => { stopRotation(); mapRef.current?.flyTo({ ...INITIAL_VIEW, duration: 1400 }); }, [stopRotation]);
 
@@ -351,7 +357,7 @@ export default function GlobeMap() {
     <>
       <div ref={containerRef} className={styles.map} role="application" />
       <LocationsPanel onLocationClick={handleLocationClick} />
-      <BottomControls rotating={rotating} theme={theme} onRotateToggle={toggleRotation} onReset={handleReset} onThemeToggle={handleThemeToggle} />
+      <BottomControls rotating={rotating} theme={theme} onRotateToggle={toggleRotation} onReset={handleReset} onThemeToggle={handleThemeToggle} onCurrentLocationDetected={handleCurrentLocationDetected} />
       <div className={`${styles.tooltip} ${tooltip.visible ? styles.tooltipVisible : ''}`} role="tooltip" style={{ left: tooltip.x + 14, top: tooltip.y - 44 }}>
         {tooltip.name}
       </div>

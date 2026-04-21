@@ -1,17 +1,8 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import locationsData from '@/data/locations.json';
+import { useLocations, type LocationItem } from '@/hooks/useLocations';
 import styles from './index.module.scss';
-
-interface LocationItem {
-  coordinate: { lat: number; lng: number };
-  logo: string;
-  createdAt: string;
-  city: string;
-  country: string;
-  continent: string;
-}
 
 // Icons
 const ChevronIcon = ({ className }: { className?: string }) => (
@@ -79,7 +70,8 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
     'Asia': true
   });
 
-  const locations = locationsData.locations as LocationItem[];
+  const { data, isLoading, isError } = useLocations();
+  const locations: LocationItem[] = data?.locations ?? [];
 
   const { rootData, stats } = useMemo(() => {
     const data: Record<string, TreeContinent> = {};
@@ -173,6 +165,8 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
             />
           </div>
 
+          {isLoading && <div className={styles.treeList}>Loading…</div>}
+          {isError && <div className={styles.treeList}>Failed to load locations.</div>}
           <div className={styles.treeList}>
             {Object.values(filteredData).map((continent) => {
               const isContExpanded = filterQuery ? true : expandedNodes[continent.name];

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './globals.scss';
+import QueryProvider from '@/providers/QueryProvider';
 
 export const metadata: Metadata = {
   title: 'Globe View',
@@ -15,7 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#globe-main" className="skip-link">
           Skip to globe
         </a>
-        {children}
+        <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { type CurrentLocationAnalysis } from '@/lib/api';
 import ThemeToggle from '@/components/ThemeToggle';
 
 import styles from './index.module.scss';
@@ -38,6 +39,7 @@ interface Props {
   onRotateToggle: () => void;
   onReset: () => void;
   onThemeToggle: () => void;
+  onCurrentLocationDetected?: (location: CurrentLocationAnalysis) => void;
 }
 
 export default function BottomControls({
@@ -46,62 +48,174 @@ export default function BottomControls({
   onRotateToggle,
   onReset,
   onThemeToggle,
+  onCurrentLocationDetected,
 }: Props) {
   const [showCheckinMenu, setShowCheckinMenu] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [locationAnalysis, setLocationAnalysis] =
+    useState<CurrentLocationAnalysis | null>(null);
+
+  const closeCheckinUi = () => {
+    setShowCheckinMenu(false);
+    setLocationAnalysis(null);
+    setLocationError('');
+    setIsLocating(false);
+  };
+
+  const handleCurrentLocation = () => {
+    setIsLocating(true);
+    setLocationError('');
+    const result: CurrentLocationAnalysis = {
+      coordinate: {
+        lat: 65.01236,
+        lng: 25.46816,
+      },
+      city: 'Oulu',
+      locality: 'Oulu',
+      country: 'Finland',
+      countryCode: 'FI',
+      continent: 'Europe',
+      continentCode: 'EU',
+      principalSubdivision: 'North Ostrobothnia',
+      postcode: '',
+      plusCode: '',
+    };
+
+    window.setTimeout(() => {
+      setShowCheckinMenu(false);
+      setLocationAnalysis(result);
+      setIsLocating(false);
+    }, 300);
+  };
+
+  const handleConfirmCheckin = () => {
+    if (!locationAnalysis) return;
+    onCurrentLocationDetected?.(locationAnalysis);
+    closeCheckinUi();
+  };
 
   return (
-    <nav className={styles.menu} role="toolbar" aria-label="Globe controls">
-      <button
-        className={`${styles.btn} ${rotating ? styles.active : ''}`}
-        onClick={onRotateToggle}
-        aria-pressed={rotating}
-        aria-label={rotating ? 'Stop rotation' : 'Start rotation'}
-      >
-        <span className={styles.btnIcon}>
-          <IconRotate />
-        </span>
-        {rotating ? 'Stop' : 'Rotate'}
-      </button>
-
-      <div className={styles.sep} role="separator" aria-orientation="vertical" />
-
-      <div className={styles.checkinWrapper}>
+    <>
+      {(showCheckinMenu || locationAnalysis) && (
         <button
-          className={`${styles.btn} ${showCheckinMenu ? styles.active : ''}`}
-          onClick={() => setShowCheckinMenu(!showCheckinMenu)}
-          aria-label="Checkin new location"
+          type="button"
+          className={styles.backdrop}
+          onClick={closeCheckinUi}
+          aria-label="Close checkin dialog"
+        />
+      )}
+
+      {locationAnalysis && (
+        <div
+          className={styles.analysisModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Current location analysis"
+        >
+          <div className={styles.locationAnalysis}>
+            <div className={styles.analysisTitle}>Current location analysis</div>
+            <div className={styles.analysisRow}>
+              <span>Coordinates</span>
+              <strong>
+                {locationAnalysis.coordinate.lat.toFixed(5)},{' '}
+                {locationAnalysis.coordinate.lng.toFixed(5)}
+              </strong>
+            </div>
+            <div className={styles.analysisRow}>
+              <span>City</span>
+              <strong>{locationAnalysis.city}</strong>
+            </div>
+            <div className={styles.analysisRow}>
+              <span>Country</span>
+              <strong>{locationAnalysis.country}</strong>
+            </div>
+            <div className={styles.analysisRow}>
+              <span>Continent</span>
+              <strong>{locationAnalysis.continent}</strong>
+            </div>
+          </div>
+
+          <div className={styles.modalActions}>
+            <button className={styles.modalPrimaryBtn} onClick={handleConfirmCheckin}>
+              Checkin now
+            </button>
+            <button className={styles.modalSecondaryBtn} onClick={closeCheckinUi}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      <nav className={styles.menu} role="toolbar" aria-label="Globe controls">
+        <button
+          className={`${styles.btn} ${rotating ? styles.active : ''}`}
+          onClick={onRotateToggle}
+          aria-pressed={rotating}
+          aria-label={rotating ? 'Stop rotation' : 'Start rotation'}
         >
           <span className={styles.btnIcon}>
-            <IconCamera />
+            <IconRotate />
           </span>
-          Checkin
+          {rotating ? 'Stop' : 'Rotate'}
         </button>
 
-        {showCheckinMenu && (
-          <div className={styles.popupMenu}>
-            <button className={styles.popupItem}>Current your location</button>
-            <button className={styles.popupItem}>Enter location manually</button>
-            <button className={styles.popupItem}>With the sights</button>
-          </div>
-        )}
-      </div>
+        <div className={styles.sep} role="separator" aria-orientation="vertical" />
 
-      <div className={styles.sep} role="separator" aria-orientation="vertical" />
+        <div className={styles.checkinWrapper}>
+          <button
+            className={`${styles.btn} ${showCheckinMenu ? styles.active : ''}`}
+            onClick={() => {
+              setLocationError('');
+              setLocationAnalysis(null);
+              setShowCheckinMenu(!showCheckinMenu);
+            }}
+            aria-label="Checkin new location"
+          >
+            <span className={styles.btnIcon}>
+              <IconCamera />
+            </span>
+            Checkin
+          </button>
 
-      <button
-        className={styles.btn}
-        onClick={onReset}
-        aria-label="Reset globe to default view"
-      >
-        <span className={styles.btnIcon}>
-          <IconReset />
-        </span>
-        Reset
-      </button>
+          {showCheckinMenu && (
+            <div className={styles.popupMenu}>
+              <button
+                className={styles.popupItem}
+                onClick={handleCurrentLocation}
+                disabled={isLocating}
+              >
+                {isLocating ? 'Detecting current location...' : 'Use current location'}
+              </button>
+              <button className={styles.popupItem}>Enter location manually</button>
+              <button className={styles.popupItem}>With the sights</button>
 
-      <div className={styles.sep} role="separator" aria-orientation="vertical" />
+              {locationError ? (
+                <div className={styles.locationFeedback} role="status">
+                  {locationError}
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
 
-      <ThemeToggle theme={theme} onToggle={onThemeToggle} />
-    </nav>
+        <div className={styles.sep} role="separator" aria-orientation="vertical" />
+
+        <button
+          className={styles.btn}
+          onClick={onReset}
+          aria-label="Reset globe to default view"
+        >
+          <span className={styles.btnIcon}>
+            <IconReset />
+          </span>
+          Reset
+        </button>
+
+        <div className={styles.sep} role="separator" aria-orientation="vertical" />
+
+        <ThemeToggle theme={theme} onToggle={onThemeToggle} />
+      </nav>
+    </>
   );
 }
