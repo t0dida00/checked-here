@@ -61,19 +61,57 @@
   display: flex;
   flex-shrink: 0;
   opacity: 0.85;
+}
 
-  .active & {
-    animation: spin 2.4s linear infinite;
+.checkinWrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
 
-    @include m.reduced-motion {
-      animation: none;
-    }
+  .btn {
+    width: 100%;
   }
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+.popupMenu {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  z-index: 101;
+
+  /* glass effect fallback */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.popupItem {
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: v.$font-sm;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--surface-hover);
   }
 }
 
@@ -84,7 +122,7 @@
     bottom: calc(12px + env(safe-area-inset-bottom));
     transform: none;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
     padding: 12px;
     border-radius: 22px;
