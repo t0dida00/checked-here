@@ -1,0 +1,150 @@
+{
+  "id": "session-001",
+  "userId": "user-001",
+  "lastVisited": "2026-04-22T14:42:10.333Z",
+  "locations": [
+    {
+      "coordinate": {
+        "lat": 40.7128,
+        "lng": -74.006
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "US",
+      "flag": "https://flagcdn.com/us.svg",
+      "createdAt": "2026-04-20T09:30:00Z",
+      "city": "New York",
+      "country": "United States",
+      "continent": "North America"
+    },
+    {
+      "coordinate": {
+        "lat": 48.8566,
+        "lng": 2.3522
+      },
+      "logo": "/locations/paris.svg",
+      "countryCode": "FR",
+      "flag": "https://flagcdn.com/fr.svg",
+      "createdAt": "2026-04-18T14:15:00Z",
+      "city": "Paris",
+      "country": "France",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 35.6762,
+        "lng": 139.6503
+      },
+      "logo": "/locations/tokyo.svg",
+      "countryCode": "JP",
+      "flag": "https://flagcdn.com/jp.svg",
+      "createdAt": "2026-04-15T07:45:00Z",
+      "city": "Tokyo",
+      "country": "Japan",
+      "continent": "Asia"
+    },
+    {
+      "coordinate": {
+        "lat": 45.764,
+        "lng": 4.8357
+      },
+      "logo": "/locations/lyon.svg",
+      "countryCode": "FR",
+      "flag": "https://flagcdn.com/fr.svg",
+      "createdAt": "2026-04-21T18:37:00Z",
+      "city": "Lyon",
+      "country": "France",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 39.47132,
+        "lng": -0.375984
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "ES",
+      "flag": "https://flagcdn.com/es.svg",
+      "createdAt": "2026-04-21T23:25:07.111Z",
+      "city": "Valencia",
+      "country": "Spain",
+      "continent": "Unknown"
+    },
+    {
+      "coordinate": {
+        "lat": 40.421345,
+        "lng": -3.701219
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "ES",
+      "flag": "https://flagcdn.com/es.svg",
+      "createdAt": "2026-04-21T23:25:58.683Z",
+      "city": "Madrid",
+      "country": "Spain",
+      "continent": "Unknown"
+    },
+    {
+      "coordinate": {
+        "lat": 10.775525,
+        "lng": 106.702105
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "VN",
+      "flag": "https://flagcdn.com/vn.svg",
+      "createdAt": "2026-04-21T23:26:36.855Z",
+      "city": "Ho Chi Minh City",
+      "country": "Vietnam",
+      "continent": "Unknown"
+    },
+    {
+      "coordinate": {
+        "lat": 65.0257,
+        "lng": 25.4223
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "FI",
+      "flag": "https://flagcdn.com/fi.svg",
+      "createdAt": "2026-04-22T14:36:34.397Z",
+      "city": "Oulu",
+      "country": "Finland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 41.899986,
+        "lng": 12.476713
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "IT",
+      "flag": "https://flagcdn.com/it.svg",
+      "createdAt": "2026-04-22T14:40:17.296Z",
+      "city": "Rome",
+      "country": "Italy",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 52.23072,
+        "lng": 21.016317
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "PL",
+      "flag": "https://flagcdn.com/pl.svg",
+      "createdAt": "2026-04-22T14:40:38.079Z",
+      "city": "Warsaw",
+      "country": "Poland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 65.0257,
+        "lng": 25.4223
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "FI",
+      "flag": "https://flagcdn.com/fi.svg",
+      "createdAt": "2026-04-22T14:42:10.333Z",
+      "city": "Oulu",
+      "country": "Finland",
+      "continent": "Europe"
+    }
+  ]
+}

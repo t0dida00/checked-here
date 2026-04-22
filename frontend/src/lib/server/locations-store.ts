@@ -5,6 +5,7 @@ import type { CoordinateInput, CurrentLocationAnalysis, LocationsResponse } from
 
 const locationsFilePath = path.join(process.cwd(), 'src', 'data', 'locations.json');
 const defaultLogo = '/locations/new-york.svg';
+const defaultFlag = 'https://flagcdn.com/fi.svg';
 
 async function readLocationsFile(): Promise<LocationsResponse> {
   const raw = await fs.readFile(locationsFilePath, 'utf8');
@@ -31,6 +32,7 @@ export async function analyzeCoordinateFromBackend(
     locality: 'Oulu',
     country: 'Finland',
     countryCode: 'FI',
+    flag: defaultFlag,
     continent: 'Europe',
   };
 }
@@ -45,6 +47,8 @@ export async function saveCheckinToStore(
   current.locations.push({
     coordinate: analysis.coordinate,
     logo: defaultLogo,
+    countryCode: analysis.countryCode || '',
+    flag: analysis.flag || defaultFlag,
     createdAt: timestamp,
     city: analysis.city,
     country: analysis.country,

@@ -3,6 +3,8 @@ import axios from 'axios';
 export interface LocationItem {
   coordinate: { lat: number; lng: number };
   logo: string;
+  countryCode: string;
+  flag: string;
   createdAt: string;
   city: string;
   country: string;
@@ -27,6 +29,7 @@ export interface CurrentLocationAnalysis {
   locality: string;
   country: string;
   countryCode: string;
+  flag: string;
   continent: string;
   continentCode?: string;
   principalSubdivision?: string;
@@ -43,49 +46,53 @@ export interface ManualLocationSuggestion {
   coordinate: CoordinateInput;
 }
 
-const apiClient = axios.create({ baseURL: '/api' });
+interface CheckinResponse {
+  isSuccess: boolean;
+  status: number;
+  data: LocationItem;
+}
+
+interface AnalysisResponse {
+  isSuccess: boolean;
+  status: number;
+  data: CurrentLocationAnalysis;
+}
+
+const backendApiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:5000/api/v1',
+});
+
+const frontendApiClient = axios.create({ baseURL: '/api' });
 
 export async function fetchLocations(): Promise<LocationsResponse> {
-  const { data } = await apiClient.get<LocationsResponse>('/locations');
+  const { data } = await backendApiClient.get<LocationsResponse>('/locations');
   return data;
 }
 
 export async function analyzeCoordinates(
   coordinate: CoordinateInput,
 ): Promise<CurrentLocationAnalysis> {
-  const { data } = await apiClient.post<Partial<CurrentLocationAnalysis>>(
-    '/checkin',
-    { coordinate },
-  );
+  const { data } = await backendApiClient.post<AnalysisResponse>('/checkin/analyze', {
+    coordinate,
+  });
 
-  return {
-    coordinate: data.coordinate || coordinate,
-    city: data.city || 'Unknown location',
-    locality: data.locality || data.city || '',
-    country: data.country || 'Unknown country',
-    countryCode: data.countryCode || '',
-    continent: data.continent || 'Unknown continent',
-    continentCode: data.continentCode,
-    principalSubdivision: data.principalSubdivision,
-    postcode: data.postcode,
-    plusCode: data.plusCode,
-  };
+  return data.data;
 }
 
 export async function createCheckin(
   analysis: CurrentLocationAnalysis,
-): Promise<LocationsResponse> {
-  const { data } = await apiClient.post<LocationsResponse>('/checkin', {
+): Promise<LocationItem> {
+  const { data } = await backendApiClient.post<CheckinResponse>('/checkin', {
     analysis,
   });
 
-  return data;
+  return data.data;
 }
 
 export async function searchLocations(
   query: string,
 ): Promise<ManualLocationSuggestion[]> {
-  const { data } = await apiClient.get<ManualLocationSuggestion[]>('/location-search', {
+  const { data } = await frontendApiClient.get<ManualLocationSuggestion[]>('/location-search', {
     params: { q: query },
   });
 

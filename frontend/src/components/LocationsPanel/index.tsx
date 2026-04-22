@@ -50,6 +50,7 @@ const LocationSmallIcon = ({ className }: { className?: string }) => (
 interface TreeCountry {
   name: string;
   cities: LocationItem[];
+  flag: string;
 }
 
 interface TreeContinent {
@@ -82,7 +83,11 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
         data[loc.continent] = { name: loc.continent, countries: {} };
       }
       if (!data[loc.continent].countries[loc.country]) {
-        data[loc.continent].countries[loc.country] = { name: loc.country, cities: [] };
+        data[loc.continent].countries[loc.country] = {
+          name: loc.country,
+          cities: [],
+          flag: loc.flag,
+        };
       }
       data[loc.continent].countries[loc.country].cities.push(loc);
       uniqueCountries.add(loc.country);
@@ -202,7 +207,15 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
                               }}
                             >
                               <ChevronIcon className={`${styles.chevron} ${isCtryExpanded ? styles.expanded : ''}`} />
-                              <FlagIcon className={styles.icon} />
+                              {country.flag ? (
+                                <img
+                                  src={country.flag}
+                                  alt={`${country.name} flag`}
+                                  className={styles.countryFlag}
+                                />
+                              ) : (
+                                <FlagIcon className={styles.icon} />
+                              )}
                               <span className={styles.nodeName}>{country.name}</span>
                               <span className={styles.badge}>{cityCount}</span>
                             </div>

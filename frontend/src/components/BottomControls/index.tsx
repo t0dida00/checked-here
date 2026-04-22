@@ -6,6 +6,8 @@ import {
   analyzeCoordinates,
   createCheckin,
   type CurrentLocationAnalysis,
+  type LocationItem,
+  type LocationsResponse,
   type ManualLocationSuggestion,
   searchLocations,
 } from '@/lib/api';
@@ -63,12 +65,25 @@ export default function BottomControls({
   const [isLocating, setIsLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSearchingManual, setIsSearchingManual] = useState(false);
+  const [isResolvingManualLocation, setIsResolvingManualLocation] = useState(false);
   const [showManualLocationModal, setShowManualLocationModal] = useState(false);
   const [manualQuery, setManualQuery] = useState('');
   const [manualSuggestions, setManualSuggestions] = useState<ManualLocationSuggestion[]>([]);
   const [locationError, setLocationError] = useState('');
   const [locationAnalysis, setLocationAnalysis] =
     useState<CurrentLocationAnalysis | null>(null);
+
+  const appendCheckedInLocation = (location: LocationItem) => {
+    queryClient.setQueryData<LocationsResponse | undefined>(locationsQueryKey, (current) => {
+      if (!current) return current;
+
+      return {
+        ...current,
+        lastVisited: location.createdAt,
+        locations: [...current.locations, location],
+      };
+    });
+  };
 
   const closeCheckinUi = () => {
     setShowCheckinMenu(false);
@@ -77,6 +92,7 @@ export default function BottomControls({
     setLocationError('');
     setIsLocating(false);
     setIsSearchingManual(false);
+    setIsResolvingManualLocation(false);
     setManualQuery('');
     setManualSuggestions([]);
   };
@@ -122,15 +138,17 @@ export default function BottomControls({
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
-          const result = await analyzeCoordinates({
+          const coordinate = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
-          });
-
+          };
+          const analysis = await analyzeCoordinates(coordinate);
           setShowCheckinMenu(false);
-          setLocationAnalysis(result);
+          setLocationAnalysis(analysis);
+
+          onCurrentLocationDetected?.(analysis);
         } catch {
-          setLocationError('Unable to analyze your current coordinates right now.');
+          setLocationError('Unable to analyze your current location right now.');
         } finally {
           setIsLocating(false);
         }
@@ -153,8 +171,9 @@ export default function BottomControls({
     setLocationError('');
 
     void createCheckin(locationAnalysis)
-      .then((updatedLocations) => {
-        queryClient.setQueryData(locationsQueryKey, updatedLocations);
+      .then((location) => {
+        appendCheckedInLocation(location);
+        void queryClient.invalidateQueries({ queryKey: locationsQueryKey });
         closeCheckinUi();
       })
       .catch(() => {
@@ -166,16 +185,20 @@ export default function BottomControls({
   };
 
   const handleManualLocationSelect = (suggestion: ManualLocationSuggestion) => {
-    setShowManualLocationModal(false);
+    setIsResolvingManualLocation(true);
     setLocationError('');
-    setLocationAnalysis({
-      coordinate: suggestion.coordinate,
-      city: suggestion.city,
-      locality: suggestion.city,
-      country: suggestion.country,
-      countryCode: '',
-      continent: suggestion.continent,
-    });
+
+    void analyzeCoordinates(suggestion.coordinate)
+      .then((analysis) => {
+        setShowManualLocationModal(false);
+        setLocationAnalysis(analysis);
+      })
+      .catch(() => {
+        setLocationError('Unable to analyze this location right now.');
+      })
+      .finally(() => {
+        setIsResolvingManualLocation(false);
+      });
   };
 
   return (
@@ -212,13 +235,17 @@ export default function BottomControls({
                 <div className={styles.manualSearchHint}>Searching locations...</div>
               ) : null}
 
-              {!isSearchingManual && manualQuery.trim().length < 2 ? (
+              {isResolvingManualLocation ? (
+                <div className={styles.manualSearchHint}>Resolving location details...</div>
+              ) : null}
+
+              {!isSearchingManual && !isResolvingManualLocation && manualQuery.trim().length < 2 ? (
                 <div className={styles.manualSearchHint}>
                   Type at least 2 characters to see suggestions.
                 </div>
               ) : null}
 
-              {!isSearchingManual && manualQuery.trim().length >= 2 && manualSuggestions.length === 0 ? (
+              {!isSearchingManual && !isResolvingManualLocation && manualQuery.trim().length >= 2 && manualSuggestions.length === 0 ? (
                 <div className={styles.manualSearchHint}>No matching locations found.</div>
               ) : null}
 
@@ -228,6 +255,7 @@ export default function BottomControls({
                   type="button"
                   className={styles.manualSearchItem}
                   onClick={() => handleManualLocationSelect(suggestion)}
+                  disabled={isResolvingManualLocation}
                 >
                   <span className={styles.manualSearchPrimary}>{suggestion.city}</span>
                   <span className={styles.manualSearchSecondary}>{suggestion.label}</span>
@@ -237,7 +265,11 @@ export default function BottomControls({
           </div>
 
           <div className={styles.modalActions}>
-            <button className={styles.modalSecondaryBtn} onClick={closeCheckinUi}>
+            <button
+              className={styles.modalSecondaryBtn}
+              onClick={closeCheckinUi}
+              disabled={isResolvingManualLocation}
+            >
               Cancel
             </button>
           </div>
@@ -343,7 +375,7 @@ export default function BottomControls({
                 onClick={handleCurrentLocation}
                 disabled={isLocating}
               >
-                {isLocating ? 'Detecting current location...' : 'Use current location'}
+                {isLocating ? 'Analyzing current location...' : 'Use current location'}
               </button>
               <button
                 className={styles.popupItem}

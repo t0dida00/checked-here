@@ -1,0 +1,21 @@
+{
+  "name": "globe-view-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Express MVC backend for the globe-view project",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
