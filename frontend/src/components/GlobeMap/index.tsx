@@ -50,7 +50,6 @@ export default function GlobeMap() {
       location: LocationItem;
     }>
   >([]);
-  const clustersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const rafRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number | null>(null);
   const hoverRef = useRef<HoverState>({ map: null as never, hoveredId: null });
@@ -135,113 +134,9 @@ export default function GlobeMap() {
     else startRotation();
   }, [startRotation, stopRotation]);
 
-  const updateClustering = useCallback(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    const CLUSTER_RADIUS = 70; 
-    const center = map.getCenter();
-    const toRadians = (v: number) => (v * Math.PI) / 180;
-    
-    // Identify visible markers
-    const visibleMarkers = markersRef.current.filter(({ location }) => {
-      const centerLat = toRadians(center.lat);
-      const pointLat = toRadians(location.coordinate.lat);
-      const deltaLng = toRadians(((location.coordinate.lng - center.lng + 540) % 360) - 180);
-      return Math.sin(centerLat)*Math.sin(pointLat) + Math.cos(centerLat)*Math.cos(pointLat)*Math.cos(deltaLng) > 0;
-    });
-
-    // Project screen positions
-    const projectionData = visibleMarkers.map(m => ({
-      ...m,
-      pos: map.project([m.location.coordinate.lng, m.location.coordinate.lat])
-    }));
-
-    // Cluster algorithm
-    const processed = new Set();
-    type ProjectedMarker = (typeof projectionData)[number];
-    const clusters: ProjectedMarker[][] = [];
-    projectionData.forEach((m, i) => {
-      if (processed.has(i)) return;
-      processed.add(i);
-      let group = [m];
-      projectionData.forEach((other, j) => {
-        if (processed.has(j)) return;
-        if (Math.hypot(m.pos.x - other.pos.x, m.pos.y - other.pos.y) < CLUSTER_RADIUS) {
-          processed.add(j);
-          group.push(other);
-        }
-      });
-      clusters.push(group);
-    });
-
-    const nextClusters: { [key: string]: mapboxgl.Marker } = {};
-    const visiblePinSet = new Set<string>();
-
-    clusters.forEach(group => {
-      if (group.length === 1) {
-        // Individual Pin
-        const pin = group[0];
-        pin.element.style.display = 'block';
-        visiblePinSet.add(pin.location.city);
-      } else {
-        // Cluster Bubble
-        group.forEach(p => p.element.style.display = 'none');
-        
-        const clusterId = group.map(m => m.location.city).sort().join('|');
-        const representative = group[0].location;
-        const count = group.length;
-
-        if (clustersRef.current[clusterId]) {
-          // Reuse existing cluster marker
-          nextClusters[clusterId] = clustersRef.current[clusterId];
-          nextClusters[clusterId].setLngLat([representative.coordinate.lng, representative.coordinate.lat]);
-          delete clustersRef.current[clusterId];
-        } else {
-          // Create new cluster marker
-          const el = document.createElement('div');
-          el.className = styles.clusterMarker;
-          if (count > 5) el.classList.add(styles.clusterLarge);
-          else if (count > 2) el.classList.add(styles.clusterMedium);
-
-          const img = document.createElement('img');
-          img.src = representative.logo;
-          img.className = styles.clusterRepresentative;
-          
-          const badge = document.createElement('div');
-          badge.className = styles.clusterBadge;
-          badge.textContent = `+${count - 1}`;
-          
-          el.append(img, badge);
-
-          el.addEventListener('click', () => {
-            const lats = group.map(m => m.location.coordinate.lat);
-            const lngs = group.map(m => m.location.coordinate.lng);
-            map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: 100, maxZoom: 12 });
-          });
-
-          const m = new mapboxgl.Marker({ element: el, anchor: 'center' })
-            .setLngLat([representative.coordinate.lng, representative.coordinate.lat])
-            .addTo(map);
-          nextClusters[clusterId] = m;
-        }
-      }
-    });
-
-    // Clean up invisible markers and detached clusters
-    Object.values(clustersRef.current).forEach(c => c.remove());
-    clustersRef.current = nextClusters;
-
-    markersRef.current.forEach(m => {
-      if (!visiblePinSet.has(m.location.city)) m.element.style.display = 'none';
-    });
-  }, []);
-
   const clearMarkers = useCallback(() => {
     markersRef.current.forEach((m) => m.marker.remove());
     markersRef.current = [];
-    Object.values(clustersRef.current).forEach((c) => c.remove());
-    clustersRef.current = {};
   }, []);
 
   const mountMarkers = useCallback((map: mapboxgl.Map, items: LocationItem[]) => {
@@ -273,8 +168,7 @@ export default function GlobeMap() {
       const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([location.coordinate.lng, location.coordinate.lat]).addTo(map);
       return { marker, element: el, location };
     });
-    updateClustering();
-  }, [clearMarkers, updateClustering]);
+  }, [clearMarkers]);
 
   const syncJourneyLine = useCallback((map: mapboxgl.Map, items: LocationItem[]) => {
     const coordinates = items.map((loc) => [loc.coordinate.lng, loc.coordinate.lat]);
@@ -326,8 +220,7 @@ export default function GlobeMap() {
       setTooltip(c => ({ ...c, visible: false }));
     });
     map.on('mousedown', () => { if (rotatingRef.current) stopRotation(); });
-    map.on('move', updateClustering);
-  }, [mountMarkers, stopRotation, syncJourneyLine, updateClustering]);
+  }, [mountMarkers, stopRotation, syncJourneyLine]);
 
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return;

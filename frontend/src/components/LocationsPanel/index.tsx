@@ -77,7 +77,7 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
   const { rootData, stats } = useMemo(() => {
     const data: Record<string, TreeContinent> = {};
     const uniqueCountries = new Set<string>();
-    
+
     locations.forEach((loc) => {
       if (!data[loc.continent]) {
         data[loc.continent] = { name: loc.continent, countries: {} };
@@ -106,17 +106,17 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
   const filteredData = useMemo(() => {
     if (!filterQuery) return rootData;
     const lowerQuery = filterQuery.toLowerCase();
-    
+
     const result: Record<string, TreeContinent> = {};
-    
+
     Object.values(rootData).forEach(continent => {
       let matchesCont = continent.name.toLowerCase().includes(lowerQuery);
       let matchedCountries: Record<string, TreeCountry> = {};
-      
+
       Object.values(continent.countries).forEach(country => {
         let matchesCtry = country.name.toLowerCase().includes(lowerQuery);
         let matchedCities = country.cities.filter(city => city.city.toLowerCase().includes(lowerQuery));
-        
+
         if (matchesCont || matchesCtry || matchedCities.length > 0) {
           matchedCountries[country.name] = {
             ...country,
@@ -124,7 +124,7 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
           };
         }
       });
-      
+
       if (matchesCont || Object.keys(matchedCountries).length > 0) {
         result[continent.name] = {
           ...continent,
@@ -132,7 +132,7 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
         };
       }
     });
-    
+
     return result;
   }, [rootData, filterQuery]);
 
@@ -144,7 +144,7 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
     <div className={`${styles.panel} ${collapsed ? styles.collapsedPanel : ''}`}>
       <header className={styles.header}>
         <div className={styles.title}>
-          <GlobeIcon />
+          {/* <GlobeIcon /> */}
           <span>My World</span>
         </div>
         <div className={styles.tags}>
@@ -161,11 +161,11 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
         <>
           <div className={styles.filterContainer}>
             <SearchIcon />
-            <input 
-              type="text" 
-              placeholder="Search locations..." 
+            <input
+              type="text"
+              placeholder="Search locations..."
               value={filterQuery}
-              onChange={e => setFilterQuery(e.target.value)} 
+              onChange={e => setFilterQuery(e.target.value)}
               className={styles.filterInput}
             />
           </div>
@@ -179,8 +179,8 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
 
               return (
                 <div key={continent.name} className={styles.treeNodeContainer}>
-                  <div 
-                    className={`${styles.treeNode} ${styles.level0}`} 
+                  <div
+                    className={`${styles.treeNode} ${styles.level0}`}
                     onClick={() => {
                       toggleNode(continent.name);
                     }}
@@ -190,7 +190,7 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
                     <span className={styles.nodeName}>{continent.name}</span>
                     <span className={styles.badge}>{countryCount}</span>
                   </div>
-                  
+
                   {isContExpanded && (
                     <div className={styles.children}>
                       {Object.values(continent.countries).map((country) => {
@@ -200,8 +200,8 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
 
                         return (
                           <div key={country.name} className={styles.treeNodeContainer}>
-                            <div 
-                              className={`${styles.treeNode} ${styles.level1}`} 
+                            <div
+                              className={`${styles.treeNode} ${styles.level1}`}
                               onClick={() => {
                                 toggleNode(countryId);
                               }}
@@ -219,12 +219,12 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
                               <span className={styles.nodeName}>{country.name}</span>
                               <span className={styles.badge}>{cityCount}</span>
                             </div>
-                            
+
                             {isCtryExpanded && (
                               <div className={styles.children}>
                                 {country.cities.map((city, idx) => (
-                                  <div 
-                                    key={`${city.city}-${idx}`} 
+                                  <div
+                                    key={`${city.city}-${idx}`}
                                     className={`${styles.treeNode} ${styles.level2}`}
                                     onClick={() => {
                                       if (onLocationClick) {
@@ -252,7 +252,7 @@ export default function LocationsPanel({ onLocationClick }: LocationsPanelProps 
               );
             })}
           </div>
-{/* 
+          {/* 
  */}
         </>
       )}
