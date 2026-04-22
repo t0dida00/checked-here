@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   analyzeCoordinates,
   createCheckin,
@@ -61,7 +61,10 @@ export default function BottomControls({
   onCurrentLocationDetected,
 }: Props) {
   const queryClient = useQueryClient();
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const libraryInputRef = useRef<HTMLInputElement>(null);
   const [showCheckinMenu, setShowCheckinMenu] = useState(false);
+  const [showSightOptions, setShowSightOptions] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSearchingManual, setIsSearchingManual] = useState(false);
@@ -87,6 +90,7 @@ export default function BottomControls({
 
   const closeCheckinUi = () => {
     setShowCheckinMenu(false);
+    setShowSightOptions(false);
     setShowManualLocationModal(false);
     setLocationAnalysis(null);
     setLocationError('');
@@ -201,9 +205,35 @@ export default function BottomControls({
       });
   };
 
+  const handleSightPhotoSelection = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setShowSightOptions(false);
+    event.target.value = '';
+  };
+
   return (
     <>
-      {(showCheckinMenu || showManualLocationModal || locationAnalysis) && (
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={handleSightPhotoSelection}
+      />
+      <input
+        ref={libraryInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={handleSightPhotoSelection}
+      />
+
+      {(showCheckinMenu || showManualLocationModal || locationAnalysis || showSightOptions) && (
         <button
           type="button"
           className={styles.backdrop}
@@ -279,6 +309,43 @@ export default function BottomControls({
               {locationError}
             </div>
           ) : null}
+        </div>
+      )}
+
+      {showSightOptions && (
+        <div
+          className={styles.analysisModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Choose a photo source"
+        >
+          <div className={styles.locationAnalysis}>
+            <div className={styles.analysisTitle}>Check in with the sights</div>
+            <div className={styles.manualSearchHint}>
+              Choose how you want to add a photo for this check-in.
+            </div>
+          </div>
+
+          <div className={`${styles.modalActions} ${styles.sightModalActions}`}>
+            <button
+              className={styles.modalPrimaryBtn}
+              onClick={() => cameraInputRef.current?.click()}
+            >
+              Take a photo
+            </button>
+            <button
+              className={styles.modalSecondaryBtn}
+              onClick={() => libraryInputRef.current?.click()}
+            >
+              Upload from your library
+            </button>
+            <button
+              className={styles.modalSecondaryBtn}
+              onClick={() => setShowSightOptions(false)}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
@@ -358,6 +425,7 @@ export default function BottomControls({
             onClick={() => {
               setLocationError('');
               setLocationAnalysis(null);
+              setShowSightOptions(false);
               setShowCheckinMenu(!showCheckinMenu);
             }}
             aria-label="Checkin new location"
@@ -381,6 +449,7 @@ export default function BottomControls({
                 className={styles.popupItem}
                 onClick={() => {
                   setShowCheckinMenu(false);
+                  setShowSightOptions(false);
                   setShowManualLocationModal(true);
                   setLocationError('');
                   setManualQuery('');
@@ -389,7 +458,15 @@ export default function BottomControls({
               >
                 Enter location manually
               </button>
-              <button className={styles.popupItem}>With the sights</button>
+              <button
+                className={styles.popupItem}
+                onClick={() => {
+                  setShowCheckinMenu(false);
+                  setShowSightOptions(true);
+                }}
+              >
+                With the sights
+              </button>
 
               {locationError ? (
                 <div className={styles.locationFeedback} role="status">

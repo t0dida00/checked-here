@@ -267,6 +267,10 @@
   padding: 0 16px 16px;
 }
 
+.sightModalActions {
+  grid-template-columns: 1fr;
+}
+
 .modalPrimaryBtn,
 .modalSecondaryBtn {
   min-height: 46px;
