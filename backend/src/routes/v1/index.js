@@ -15,6 +15,7 @@ router.get('/', (_req, res) => {
       'GET /api/v1/health',
       'GET /api/v1/locations',
       'POST /api/v1/checkin/analyze',
+      'POST /api/v1/checkin/image-analyze',
       'POST /api/v1/checkin',
     ],
   });

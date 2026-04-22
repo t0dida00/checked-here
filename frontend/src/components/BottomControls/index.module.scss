@@ -189,6 +189,25 @@
   font-size: 0.85rem;
 }
 
+.loadingState {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 .manualSearchItem {
   display: grid;
   gap: 4px;
@@ -302,6 +321,12 @@
 
   &:hover {
     background: var(--surface-hover);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

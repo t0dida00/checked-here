@@ -2,6 +2,14 @@ const { env } = require('../config/env');
 const locationModel = require('../models/location.model');
 
 const defaultLogo = '/locations/new-york.svg';
+const sightAnalysisPrompt = [
+  'You are a geolocation expert. Look at this image and identify the most likely real-world location.',
+  'If you recognize a landmark, city, or region, return its GPS coordinates.',
+  'Respond with ONLY a raw JSON object — no markdown, no code blocks, no explanation:',
+  '{"latitude":number,"longitude":number,"confidence":number}',
+  'Use null for latitude and longitude only if you truly cannot determine the location.',
+  'confidence should be between 0 and 1.',
+].join(' ');
 const continentByCountryCode = {
   AD: 'Europe',
   AE: 'Asia',
@@ -272,6 +280,47 @@ function buildFlagUrl(countryCode) {
   return `https://flagcdn.com/${normalizedCode}.svg`;
 }
 
+function extractJsonObject(content) {
+  if (!content) {
+    throw buildBadRequest('Image analysis returned an empty response.');
+  }
+
+  // Strip markdown code fences (```json ... ``` or ``` ... ```)
+  const stripped = String(content)
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+
+  try {
+    return JSON.parse(stripped);
+  } catch (_error) {
+    const match = stripped.match(/\{[\s\S]*\}/);
+    if (!match) {
+      throw buildBadRequest('Image analysis did not return valid JSON.');
+    }
+
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      throw buildBadRequest('Image analysis did not return valid JSON.');
+    }
+  }
+}
+
+function createSafePreview(value, maxLength = 500) {
+  const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!normalized) return '';
+
+  return normalized.length > maxLength
+    ? `${normalized.slice(0, maxLength)}...`
+    : normalized;
+}
+
+function logHfDebug(message, details = {}) {
+  console.log('[hf-image-analyze]', message, details);
+}
+
 async function getLocations() {
   return locationModel.readLocations();
 }
@@ -335,6 +384,98 @@ async function analyzeCoordinates(coordinate) {
   return reverseGeocodeCoordinate(coordinate);
 }
 
+async function analyzeSightImage(imageDataUrl) {
+  const normalizedImageDataUrl = String(imageDataUrl || '').trim();
+  if (!normalizedImageDataUrl.startsWith('data:image/')) {
+    throw buildBadRequest('A valid image data URL is required.');
+  }
+
+  if (!env.hfToken) {
+    const error = new Error('Missing HF_TOKEN in environment.');
+    error.statusCode = 500;
+    throw error;
+  }
+
+  logHfDebug('request:start', {
+    model: env.hfVisionModel,
+    imageBytesApprox: normalizedImageDataUrl.length,
+    promptPreview: createSafePreview(sightAnalysisPrompt, 180),
+  });
+
+  const response = await fetch('https://router.huggingface.co/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.hfToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: env.hfVisionModel,
+      temperature: 0,
+      max_tokens: 256,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: sightAnalysisPrompt },
+            {
+              type: 'image_url',
+              image_url: {
+                url: normalizedImageDataUrl,
+              },
+            },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    logHfDebug('response:error', {
+      model: env.hfVisionModel,
+      status: response.status,
+      statusText: response.statusText,
+      bodyPreview: createSafePreview(details),
+    });
+    const error = new Error(`Hugging Face image analysis failed with status ${response.status}: ${details}`);
+    error.statusCode = response.status;
+    throw error;
+  }
+
+  const data = await response.json();
+  logHfDebug('response:success', {
+    model: env.hfVisionModel,
+    status: response.status,
+    choiceCount: Array.isArray(data.choices) ? data.choices.length : 0,
+    contentPreview: createSafePreview(data.choices?.[0]?.message?.content),
+  });
+  const content = data.choices?.[0]?.message?.content;
+  const parsed = extractJsonObject(content);
+  logHfDebug('response:parsed', {
+    latitude: parsed.latitude,
+    longitude: parsed.longitude,
+    confidence: parsed.confidence,
+  });
+  const latitude = parsed.latitude;
+  const longitude = parsed.longitude;
+
+  if (
+    typeof latitude !== 'number' ||
+    typeof longitude !== 'number' ||
+    latitude === null ||
+    longitude === null
+  ) {
+    const error = new Error(
+      'Could not detect a recognizable location in this image. Try a photo with a visible landmark, street sign, or distinctive scenery.',
+    );
+    error.statusCode = 422;
+    throw error;
+  }
+
+  const coordinate = { lat: latitude, lng: longitude };
+  return analyzeCoordinates(coordinate);
+}
+
 async function createCheckin(analysis) {
   if (
     !analysis ||
@@ -368,5 +509,6 @@ async function createCheckin(analysis) {
 module.exports = {
   getLocations,
   analyzeCoordinates,
+  analyzeSightImage,
   createCheckin,
 };

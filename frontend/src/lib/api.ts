@@ -79,6 +79,16 @@ export async function analyzeCoordinates(
   return data.data;
 }
 
+export async function analyzeSightImage(
+  imageDataUrl: string,
+): Promise<CurrentLocationAnalysis> {
+  const { data } = await backendApiClient.post<AnalysisResponse>('/checkin/image-analyze', {
+    imageDataUrl,
+  });
+
+  return data.data;
+}
+
 export async function createCheckin(
   analysis: CurrentLocationAnalysis,
 ): Promise<LocationItem> {

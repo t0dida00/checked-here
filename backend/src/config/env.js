@@ -9,6 +9,8 @@ const env = {
   port: Number(process.env.PORT) || 5000,
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   mapboxAccessToken: process.env.MAPBOX_ACCESS_TOKEN || '',
+  hfToken: process.env.HF_TOKEN || '',
+  hfVisionModel: process.env.HF_VISION_MODEL || 'Qwen/Qwen3-VL-8B-Instruct',
 };
 
 module.exports = { env };

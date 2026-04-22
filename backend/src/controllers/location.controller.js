@@ -24,6 +24,21 @@ async function analyzeCoordinates(req, res, next) {
   }
 }
 
+async function analyzeSightImage(req, res, next) {
+  try {
+    const { imageDataUrl } = req.body || {};
+    const analysis = await locationService.analyzeSightImage(imageDataUrl);
+
+    return res.status(200).json({
+      isSuccess: true,
+      status: 200,
+      data: analysis,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function createCheckin(req, res, next) {
   try {
     const { analysis } = req.body || {};
@@ -42,5 +57,6 @@ async function createCheckin(req, res, next) {
 module.exports = {
   getLocations,
   analyzeCoordinates,
+  analyzeSightImage,
   createCheckin,
 };

@@ -1,7 +1,7 @@
 {
   "id": "session-001",
   "userId": "user-001",
-  "lastVisited": "2026-04-22T14:42:10.333Z",
+  "lastVisited": "2026-04-22T16:43:17.702Z",
   "locations": [
     {
       "coordinate": {
@@ -145,6 +145,188 @@
       "city": "Oulu",
       "country": "Finland",
       "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 65.0257,
+        "lng": 25.4223
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "FI",
+      "flag": "https://flagcdn.com/fi.svg",
+      "createdAt": "2026-04-22T14:49:27.334Z",
+      "city": "Oulu",
+      "country": "Finland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 65.0257,
+        "lng": 25.4223
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "FI",
+      "flag": "https://flagcdn.com/fi.svg",
+      "createdAt": "2026-04-22T14:49:30.459Z",
+      "city": "Oulu",
+      "country": "Finland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 60.167507,
+        "lng": 24.941822
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "FI",
+      "flag": "https://flagcdn.com/fi.svg",
+      "createdAt": "2026-04-22T14:49:46.047Z",
+      "city": "Helsinki",
+      "country": "Finland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 61.4981,
+        "lng": 23.757025
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "FI",
+      "flag": "https://flagcdn.com/fi.svg",
+      "createdAt": "2026-04-22T14:50:03.783Z",
+      "city": "Tampere",
+      "country": "Finland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 60.45069,
+        "lng": 22.266672
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "FI",
+      "flag": "https://flagcdn.com/fi.svg",
+      "createdAt": "2026-04-22T14:52:15.989Z",
+      "city": "Turku",
+      "country": "Finland",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 40.4168,
+        "lng": -3.7038
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "ES",
+      "flag": "https://flagcdn.com/es.svg",
+      "createdAt": "2026-04-22T15:03:10.956Z",
+      "city": "Madrid",
+      "country": "Spain",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 40.4168,
+        "lng": -3.7038
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "ES",
+      "flag": "https://flagcdn.com/es.svg",
+      "createdAt": "2026-04-22T15:05:42.463Z",
+      "city": "Madrid",
+      "country": "Spain",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 40.4168,
+        "lng": -3.7038
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "ES",
+      "flag": "https://flagcdn.com/es.svg",
+      "createdAt": "2026-04-22T15:06:00.305Z",
+      "city": "Madrid",
+      "country": "Spain",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 40.4168,
+        "lng": -3.7038
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "ES",
+      "flag": "https://flagcdn.com/es.svg",
+      "createdAt": "2026-04-22T15:06:01.328Z",
+      "city": "Madrid",
+      "country": "Spain",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 31.2304,
+        "lng": 121.4737
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "CN",
+      "flag": "https://flagcdn.com/cn.svg",
+      "createdAt": "2026-04-22T16:35:44.764Z",
+      "city": "Shanghai",
+      "country": "People's Republic of China",
+      "continent": "Asia"
+    },
+    {
+      "coordinate": {
+        "lat": 48.8582612,
+        "lng": 2.2933581
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "FR",
+      "flag": "https://flagcdn.com/fr.svg",
+      "createdAt": "2026-04-22T16:41:03.618Z",
+      "city": "Paris",
+      "country": "France",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 52.516277,
+        "lng": 13.377697
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "DE",
+      "flag": "https://flagcdn.com/de.svg",
+      "createdAt": "2026-04-22T16:41:45.351Z",
+      "city": "Berlin",
+      "country": "Germany",
+      "continent": "Europe"
+    },
+    {
+      "coordinate": {
+        "lat": 31.2304,
+        "lng": 121.4737
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "CN",
+      "flag": "https://flagcdn.com/cn.svg",
+      "createdAt": "2026-04-22T16:42:32.475Z",
+      "city": "Shanghai",
+      "country": "People's Republic of China",
+      "continent": "Asia"
+    },
+    {
+      "coordinate": {
+        "lat": 14.5522,
+        "lng": 120.9888
+      },
+      "logo": "/locations/new-york.svg",
+      "countryCode": "PH",
+      "flag": "https://flagcdn.com/ph.svg",
+      "createdAt": "2026-04-22T16:43:17.702Z",
+      "city": "Pasay",
+      "country": "Philippines",
+      "continent": "Asia"
     }
   ]
 }

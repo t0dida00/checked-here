@@ -1,9 +1,11 @@
 'use client';
 
+import type { ChangeEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import {
   analyzeCoordinates,
+  analyzeSightImage,
   createCheckin,
   type CurrentLocationAnalysis,
   type LocationItem,
@@ -43,6 +45,12 @@ function IconReset() {
   );
 }
 
+function Spinner() {
+  return (
+    <span className={styles.spinner} aria-hidden="true" />
+  );
+}
+
 interface Props {
   rotating: boolean;
   theme: 'dark' | 'light';
@@ -67,6 +75,7 @@ export default function BottomControls({
   const [showSightOptions, setShowSightOptions] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAnalyzingSight, setIsAnalyzingSight] = useState(false);
   const [isSearchingManual, setIsSearchingManual] = useState(false);
   const [isResolvingManualLocation, setIsResolvingManualLocation] = useState(false);
   const [showManualLocationModal, setShowManualLocationModal] = useState(false);
@@ -96,6 +105,7 @@ export default function BottomControls({
     setLocationError('');
     setIsLocating(false);
     setIsSearchingManual(false);
+    setIsAnalyzingSight(false);
     setIsResolvingManualLocation(false);
     setManualQuery('');
     setManualSuggestions([]);
@@ -205,14 +215,36 @@ export default function BottomControls({
       });
   };
 
-  const handleSightPhotoSelection = (
-    event: React.ChangeEvent<HTMLInputElement>,
+  const readFileAsDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Unable to read the selected image.'));
+      reader.readAsDataURL(file);
+    });
+
+  const handleSightPhotoSelection = async (
+    event: ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setShowSightOptions(false);
-    event.target.value = '';
+    setIsAnalyzingSight(true);
+    setLocationError('');
+
+    try {
+      const imageDataUrl = await readFileAsDataUrl(file);
+      const analysis = await analyzeSightImage(imageDataUrl);
+
+      setShowSightOptions(false);
+      setLocationAnalysis(analysis);
+      onCurrentLocationDetected?.(analysis);
+    } catch {
+      setLocationError('Unable to analyze this image right now.');
+    } finally {
+      setIsAnalyzingSight(false);
+      event.target.value = '';
+    }
   };
 
   return (
@@ -321,31 +353,47 @@ export default function BottomControls({
         >
           <div className={styles.locationAnalysis}>
             <div className={styles.analysisTitle}>Check in with the sights</div>
-            <div className={styles.manualSearchHint}>
-              Choose how you want to add a photo for this check-in.
-            </div>
+            {isAnalyzingSight ? (
+              <div className={styles.loadingState}>
+                <Spinner />
+                <span>Analysing image and detecting the sightseeing location...</span>
+              </div>
+            ) : (
+              <div className={styles.manualSearchHint}>
+                Choose how you want to add a photo for this check-in.
+              </div>
+            )}
           </div>
 
           <div className={`${styles.modalActions} ${styles.sightModalActions}`}>
             <button
               className={styles.modalPrimaryBtn}
               onClick={() => cameraInputRef.current?.click()}
+              disabled={isAnalyzingSight}
             >
-              Take a photo
+              {isAnalyzingSight ? 'Analysing...' : 'Take a photo'}
             </button>
             <button
               className={styles.modalSecondaryBtn}
               onClick={() => libraryInputRef.current?.click()}
+              disabled={isAnalyzingSight}
             >
-              Upload from your library
+              {isAnalyzingSight ? 'Analysing...' : 'Upload from your library'}
             </button>
             <button
               className={styles.modalSecondaryBtn}
               onClick={() => setShowSightOptions(false)}
+              disabled={isAnalyzingSight}
             >
               Cancel
             </button>
           </div>
+
+          {locationError ? (
+            <div className={styles.locationFeedback} role="status">
+              {locationError}
+            </div>
+          ) : null}
         </div>
       )}
 
